@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   VStack,
   FormControl,
@@ -7,10 +7,11 @@ import {
   InputGroup,
   InputRightElement,
   Button,
-  useToast,
+  IconButton,
 } from "@chakra-ui/react";
-import axios from "axios";
-import { API_BASE_URL } from "../../consts";
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import useShowToast from "../useShowToast";
+import { registerUser } from "../../apis/auth.js";
 
 const cloudinary_base_url =
   "https://api.cloudinary.com/v1_1/dvafcmdcx/image/upload";
@@ -24,7 +25,7 @@ const SignUp = () => {
   const [show, setShow] = useState("");
   const [pic, setPic] = useState("");
   const [loading, setLoading] = useState(false);
-  const toast = useToast();
+  const ShowToast = useShowToast();
 
   const resetForm = () => {
     setName("");
@@ -40,69 +41,48 @@ const SignUp = () => {
     setLoading(true);
     console.log(name, email, password, confirm);
     if (!name || !email || !password || !confirm) {
-      toast({
-        title: "Invalid Form",
-        description: "Please fill all required fields.",
-        status: "warning",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast("Invalid Form", "Please fill all required fields.", "warning");
+
       setLoading(false);
 
       return;
     }
     if (password !== confirm) {
-      toast({
-        title: "Password Validation",
-        description: "Password and confirm password should be the same",
-        status: "warning",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast(
+        "Password Validation",
+        "Password and confirm password should be the same",
+        "warning"
+      );
+
       setLoading(false);
 
       return;
     }
     try {
-      const config = {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
       const userData = {
         name,
         email,
         password,
-        pic,
+        pic: pic || "",
       };
-      const { data } = await axios.post(
-        `${API_BASE_URL}/users`,
-        userData,
-        config
+
+      const { data } = await registerUser(userData);
+
+      ShowToast(
+        "User Register",
+        data.message || "Register successfully",
+        "success"
       );
 
-      toast({
-        title: "User Register",
-        description: "Register successfully",
-        status: "success",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
       resetForm();
       return;
     } catch (error) {
       console.log(error);
-      toast({
-        title: "Register Error",
-        description: error.response?.data?.message || "Something went wrong",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast(
+        "Register Error",
+        error.response?.data?.message || "Something went wrong",
+        "error"
+      );
       setLoading(false);
     }
   };
@@ -110,13 +90,8 @@ const SignUp = () => {
     setLoading(true);
 
     if (!pics) {
-      toast({
-        title: "Upload Image",
-        description: "Please select an image to upload",
-        status: "warning",
-        duration: 4000,
-        isClosable: true,
-      });
+      ShowToast("Upload Image", "Please select an image to upload", "warning");
+
       return;
     }
 
@@ -132,52 +107,39 @@ const SignUp = () => {
         .then((response) => response.json())
         .then((res) => {
           setPic(res.url.toString());
-          toast({
-            title: "Upload Image",
-            description: "Image Uploaded successfully",
-            status: "success",
-            duration: 4000,
-            isClosable: true,
-            position: "top",
-          });
+          ShowToast("Upload Image", "Image Uploaded successfully", "success");
 
           setLoading(false);
         })
         .catch((err) => {
           console.log("error of pic : ", err);
-          toast({
-            title: "Upload Image",
-            description: "Some Error occurred while uploading",
-            status: "error",
-            duration: 4000,
-            isClosable: true,
-            position: "top",
-          });
+          ShowToast(
+            "Upload Image",
+            "Some Error occurred while uploading",
+            "error"
+          );
+
           setLoading(false);
         });
     } else {
-      toast({
-        title: "Upload Image",
-        description: "Please select an image to upload",
-        status: "warning",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast("Upload Image", "Please select an image to upload", "warning");
       setLoading(false);
 
       return;
     }
   };
+
   return (
     <VStack spacing={5}>
       <FormControl isRequired>
         <FormLabel>Name</FormLabel>
         <Input
+          defaultValue={name}
           type="text"
           placeholder="Enter your name"
           onChange={(e) => setName(e.target.value)}
-          variant="filled"
+          variant="outline"
+          value={name}
         />
       </FormControl>
 
@@ -187,7 +149,8 @@ const SignUp = () => {
           type="text"
           placeholder="Enter your Email"
           onChange={(e) => setEmail(e.target.value)}
-          variant="filled"
+          variant="outline"
+          value={email}
         />
       </FormControl>
 
@@ -198,12 +161,14 @@ const SignUp = () => {
             type={show ? "text" : "password"}
             placeholder="Enter your password"
             onChange={(e) => setPassword(e.target.value)}
-            variant="filled"
+            variant="outline"
+            value={password}
           />
-          <InputRightElement pr={2}>
-            <Button onClick={() => setShow(!show)}>
-              {show ? "Hide" : "Show"}
-            </Button>
+          <InputRightElement pr={0}>
+            <IconButton
+              icon={show ? <ViewOffIcon /> : <ViewIcon />}
+              onClick={() => setShow(!show)}
+            />
           </InputRightElement>
         </InputGroup>
       </FormControl>
@@ -215,12 +180,14 @@ const SignUp = () => {
             type={show ? "text" : "password"}
             placeholder="Enter your confirm password"
             onChange={(e) => setConfirmPassword(e.target.value)}
-            variant="filled"
+            variant="outline"
+            value={confirm}
           />
-          <InputRightElement pr={2}>
-            <Button onClick={() => setShow(!show)}>
-              {show ? "Hide" : "Show"}
-            </Button>
+          <InputRightElement pr={0}>
+            <IconButton
+              icon={show ? <ViewOffIcon /> : <ViewIcon />}
+              onClick={() => setShow(!show)}
+            ></IconButton>
           </InputRightElement>
         </InputGroup>
       </FormControl>
@@ -233,7 +200,7 @@ const SignUp = () => {
           accept="image/*"
           placeholder="Enter your Email"
           onChange={(e) => uploadImage(e.target.files[0])}
-          variant="filled"
+          variant="outline"
         />
       </FormControl>
       <Button

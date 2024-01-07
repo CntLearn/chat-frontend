@@ -8,18 +8,17 @@ import {
   ModalCloseButton,
   Button,
   useDisclosure,
-  Text,
-  useToast,
   FormControl,
   Input,
   Box,
 } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
 import { ChatState } from "../../context/ChatProvider";
-import axios from "axios";
-import { API_BASE_URL } from "../../consts";
 import UserListItem from "./UserListItem";
 import UserBadgeItem from "./UserBadgeItem";
+import useShowToast from "../useShowToast";
+import { fetchUsers } from "../../apis/chat/users";
+import { createGroup } from "../../apis/chat/chats";
 
 const initialStates = {
   groupName: "",
@@ -36,9 +35,8 @@ const GroupChatModal = ({ children }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const { user, setUser, chats, setChats } = ChatState();
-
-  const toast = useToast();
+  const { user, chats, setChats } = ChatState();
+  const ShowToast = useShowToast();
   useEffect(() => {
     return () => {
       resetStates();
@@ -54,15 +52,9 @@ const GroupChatModal = ({ children }) => {
     if (!value) return;
     try {
       setLoading(true);
-      const config = {
-        headers: {
-          authorization: `Bearer ${user.token}`,
-        },
-      };
-      const { data } = await axios.get(
-        `${API_BASE_URL}/users?search=${value}`,
-        config
-      );
+
+      const { data } = await fetchUsers(value);
+
       const filteredUsers = data?.data?.users?.filter(
         (usr) => usr._id !== user._id
       );
@@ -70,76 +62,47 @@ const GroupChatModal = ({ children }) => {
       setLoading(false);
     } catch (error) {
       console.log("user error : ", error);
-      toast({
-        title: "user search error",
-        description: error.message || "Server error occurred",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast(
+        "user search error",
+        error.message || "Server error occurred",
+        "error"
+      );
+
       setLoading(false);
     }
   };
   const handleSubmit = async () => {
     if (selectedUsers.length < 2) {
-      toast({
-        title: "User Selection",
-        description: "Atleast Two User must be Selected",
-        status: "warning",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast(
+        "User Selection",
+        "Atleast Two User must be Selected",
+        "warning"
+      );
+
       return;
     }
     try {
-      const config = {
-        headers: {
-          authorization: `Bearer ${user.token}`,
-        },
-      };
-      const { data } = await axios.post(
-        `${API_BASE_URL}/chats/group`,
-        {
-          users: selectedUsers.map((user) => user._id),
-          name: groupName,
-        },
-        config
-      );
+      const users = selectedUsers.map((user) => user._id);
+
+      const { data } = await createGroup(users, groupName);
 
       setChats([data.data.chats[0], ...chats]);
       closeModal();
-
-      toast({
-        title: "Group Created",
-        description: "Group Created successfully",
-        status: "success",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast("Group Created", "Group Created successfully", "success");
     } catch (error) {
-      toast({
-        title: "Group creation",
-        description: error.message || "server error on creating group chat",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      console.log(error);
+      ShowToast(
+        "Group creation",
+        error.message || "server error on creating group chat",
+        "error"
+      );
     }
   };
+
   const handleGroup = (user) => {
     if (selectedUsers.find((usr) => usr._id === user._id)) {
-      toast({
-        title: "User Selection",
-        description: "User Already Selected",
-        status: "warning",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast("User Selection", "User Already Selected", "warning");
+
       return;
     }
     setSelectedUsers([...selectedUsers, user]);
@@ -153,15 +116,9 @@ const GroupChatModal = ({ children }) => {
     let filteredUsers = [...selectedUsers];
     filteredUsers = filteredUsers.filter((usr) => usr._id !== user._id);
     setSelectedUsers([...filteredUsers]);
-    toast({
-      title: "User Removed",
-      description: "User Removed Successfully",
-      status: "success",
-      duration: 4000,
-      isClosable: true,
-      position: "top",
-    });
+    ShowToast("User Removed", "User Removed Successfully", "success");
   };
+
   return (
     <React.Fragment>
       <span onClick={onOpen}> {children} </span>

@@ -8,17 +8,16 @@ import {
   Spinner,
   Text,
   useDisclosure,
-  useToast,
 } from "@chakra-ui/react";
 import { ArrowBackIcon, ViewIcon } from "@chakra-ui/icons";
 import { getChatName, getChatNameFull } from "../../config/chatLogics";
 import Profile from "./Profile";
 import UpdateGroupChatModal from "./UpdateGroupChatModal";
 import ScrollableChat from "./ScrollableChat";
-import axios from "axios";
-import { API_BASE_URL } from "../../consts";
 import "./singleChat.css";
 import io from "socket.io-client";
+import useShowToast from "../useShowToast";
+import { fetchMessages, sendMessageToUser } from "../../apis/chat/messages";
 
 let socket = "",
   selectedChatCompare = "";
@@ -29,7 +28,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const { user, selectedChat, setSelectedChat, notification, setNotification } =
     ChatState();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const toast = useToast();
+
+  const ShowToast = useShowToast();
 
   // message
   const [messages, setMessages] = useState([]);
@@ -84,34 +84,24 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       socket.emit("stop typing", selectedChat._id);
       try {
         setLoading(true);
-        const config = {
-          headers: {
-            authorization: `Bearer ${user.token}`,
-          },
-        };
+
         const message = {
           message: newMessage,
           chatId: selectedChat._id,
         };
-        const { data } = await axios.post(
-          `${API_BASE_URL}/messages`,
-          message,
-          config
-        );
+        const { data } = await sendMessageToUser(message);
         socket.emit("send message", data.data.message);
         setMessages([...messages, data.data.message]);
         setLoading(false);
         SetNewMessage("");
       } catch (error) {
         console.log("user error : ", error);
-        toast({
-          title: "Message Send",
-          description: error.message || "Server error occurred",
-          status: "error",
-          duration: 4000,
-          isClosable: true,
-          position: "top",
-        });
+        ShowToast(
+          "Message Send",
+          error.message || "Server error occurred",
+          "error"
+        );
+
         setLoading(false);
       }
     }
@@ -121,29 +111,19 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     if (!selectedChat) return;
     try {
       setLoading(true);
-      const config = {
-        headers: {
-          authorization: `Bearer ${user.token}`,
-        },
-      };
 
-      const { data } = await axios.get(
-        `${API_BASE_URL}/messages/${selectedChat._id}`,
-        config
-      );
+      const { data } = await fetchMessages(selectedChat._id);
       setMessages(data.data.messages);
       setLoading(false);
       socket.emit("join chat", selectedChat._id);
     } catch (error) {
       console.log("user error : ", error);
-      toast({
-        title: "Message Fetching",
-        description: error.message || "Server error occurred",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast(
+        "Message Fetching",
+        error.message || "Server error occurred",
+        "error"
+      );
+
       setLoading(false);
     }
   };

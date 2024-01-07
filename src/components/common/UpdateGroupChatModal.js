@@ -8,7 +8,6 @@ import {
   ModalCloseButton,
   Button,
   useDisclosure,
-  useToast,
   FormControl,
   Input,
   Box,
@@ -17,11 +16,12 @@ import {
 } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
 import { ChatState } from "../../context/ChatProvider";
-import axios from "axios";
-import { API_BASE_URL } from "../../consts";
 import UserListItem from "./UserListItem";
 import UserBadgeItem from "./UserBadgeItem";
 import { ViewIcon } from "@chakra-ui/icons";
+import useShowToast from "../useShowToast";
+import { fetchUsers } from "../../apis/chat/users";
+import { addToGroup, removeFromGroup } from "../../apis/chat/chats";
 
 const UpdateGroupChatModal = ({
   fetchAgain,
@@ -31,14 +31,13 @@ const UpdateGroupChatModal = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   // setUser, chats, setChats,
   const { user, selectedChat, setSelectedChat } = ChatState();
-  console.log(selectedChat);
 
   const [groupName, setGroupName] = useState(selectedChat.name);
   const [selectedUsers, setSelectedUsers] = useState(selectedChat.users);
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [renameLoading, setRenameLoading] = useState(false);
-  const toast = useToast();
+  const ShowToast = useShowToast();
   useEffect(() => {
     return () => {
       resetStates();
@@ -61,15 +60,9 @@ const UpdateGroupChatModal = ({
     if (!value) return;
     try {
       setLoading(true);
-      const config = {
-        headers: {
-          authorization: `Bearer ${user.token}`,
-        },
-      };
-      const { data } = await axios.get(
-        `${API_BASE_URL}/users?search=${value}`,
-        config
-      );
+
+      const { data } = await fetchUsers(value);
+
       const filteredUsers = data?.data?.users?.filter(
         (usr) => usr._id !== user._id
       );
@@ -77,79 +70,44 @@ const UpdateGroupChatModal = ({
       setLoading(false);
     } catch (error) {
       console.log("user error : ", error);
-      toast({
-        title: "user search error",
-        description: error.message || "Server error occurred",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast(
+        "User Search Error",
+        error.message || "Server error occurred",
+        "error"
+      );
+
       setLoading(false);
     }
   };
 
   const addUserToGroup = async (addingUser) => {
     if (selectedChat.users.find((usr) => usr._id === addingUser._id)) {
-      toast({
-        title: "Group Add",
-        description: "User Already Selected",
-        status: "warning",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast("Group Add", "User Already Selected", "warning");
       return;
     }
 
     if (!selectedChat.groupAdmin.find((usr) => usr._id === user._id)) {
-      toast({
-        title: "Group Add",
-        description: "Group Admin Can Add Other Users",
-        status: "warning",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast("Group Add", "Group Admin Can Add Other Users", "warning");
       return;
     }
 
     try {
-      const config = {
-        headers: {
-          authorization: `Bearer ${user.token}`,
-        },
+      const group = {
+        groupId: selectedChat._id,
+        userId: addingUser._id,
       };
-      const { data } = await axios.put(
-        `${API_BASE_URL}/chats/groupadd`,
-        {
-          groupId: selectedChat._id,
-          userId: addingUser._id,
-        },
-        config
-      );
+
+      const { data } = await addToGroup(group);
 
       setFetchAgain(!fetchAgain);
-
-      toast({
-        title: "User Added",
-        description: "User Added successfully",
-        status: "success",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast("User Added", "User Added successfully", "success");
       closeModal();
     } catch (error) {
-      toast({
-        title: "Group User add",
-        description:
-          error.message || "server error on adding user to group chat",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast(
+        "Group User add",
+        error.message || "server error on adding user to group chat",
+        "error"
+      );
     }
   };
 
@@ -160,30 +118,15 @@ const UpdateGroupChatModal = ({
 
   const removeUserFromGroup = async (removedUser) => {
     if (selectedChat.groupAdmin.find((usr) => usr._id !== user._id)) {
-      toast({
-        title: "Remove User",
-        description: "Group Admin Can Remove Users",
-        status: "warning",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast("Remove User", "Group Admin Can Remove Users", "warning");
       return;
     }
     try {
-      const config = {
-        headers: {
-          authorization: `Bearer ${user.token}`,
-        },
+      const group = {
+        groupId: selectedChat._id,
+        userId: removedUser._id,
       };
-      const { data } = await axios.put(
-        `${API_BASE_URL}/chats/groupremove`,
-        {
-          groupId: selectedChat._id,
-          userId: removedUser._id,
-        },
-        config
-      );
+      const { data } = await removeFromGroup(group);
 
       if (data.success) {
         removedUser._id === user._id
@@ -192,88 +135,58 @@ const UpdateGroupChatModal = ({
         setFetchAgain(!fetchAgain);
         // after remove someone all messages should be refershed.
         fetchAllMessages();
-        toast({
-          title: "User Removed",
-          description: `User ${removedUser.name} Removed Successfully`,
-          status: "success",
-          duration: 4000,
-          isClosable: true,
-          position: "top",
-        });
+        ShowToast(
+          "User Removed",
+          `User ${removedUser.name} Removed Successfully`,
+          "success"
+        );
       } else {
-        toast({
-          title: "User Removed",
-          description: `User ${removedUser.name} Cannot be removed due to an error`,
-          status: "warning",
-          duration: 4000,
-          isClosable: true,
-          position: "top",
-        });
+        ShowToast(
+          "User Removed",
+          `User ${removedUser.name} Cannot be removed due to an error`,
+          "warning"
+        );
       }
     } catch (error) {
-      toast({
-        title: "User Remove",
-        description:
-          error.message || "Server error occurred while removing user",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast(
+        "User Remove",
+        error.message || "Server error occurred while removing user",
+        "error"
+      );
     }
   };
 
   const updateGroupName = async () => {
     try {
       setRenameLoading(true);
-      const config = {
-        headers: {
-          authorization: `Bearer ${user.token}`,
-        },
+
+      const group = {
+        id: selectedChat._id,
+        name: groupName,
       };
-      const { data } = await axios.put(
-        `${API_BASE_URL}/chats/rename`,
-        {
-          id: selectedChat._id,
-          name: groupName,
-        },
-        config
-      );
+
+      const { data } = await updateGroupName(group);
+
       if (data.success) {
         setSelectedChat(data.data.chats);
         setFetchAgain(!fetchAgain);
-        toast({
-          title: "Group Update",
-          description: `Group Name Updated Successfully`,
-          status: "success",
-          duration: 4000,
-          isClosable: true,
-          position: "top",
-        });
+        ShowToast("Group Update", `Group Name Updated Successfully`, "success");
       } else {
-        toast({
-          title: "Group Update",
-          description: `Some error occurred while updating`,
-          status: "warning",
-          duration: 4000,
-          isClosable: true,
-          position: "top",
-        });
+        ShowToast(
+          "Group Update",
+          `Some error occurred while updating`,
+          "warning"
+        );
       }
 
       setRenameLoading(false);
     } catch (error) {
       setRenameLoading(false);
-
-      toast({
-        title: "Group Update",
-        description:
-          error.message || "Server error occurred while updating group",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast(
+        "Group Update",
+        error.message || "Server error occurred while updating group",
+        "error"
+      );
     }
   };
 

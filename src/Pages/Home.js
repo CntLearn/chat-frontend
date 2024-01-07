@@ -8,7 +8,6 @@ import {
   TabList,
   TabPanels,
   TabPanel,
-  TabIndicator,
 } from "@chakra-ui/react";
 import { Login, SignUp } from "../components/Authuntication";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";

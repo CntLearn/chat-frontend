@@ -1,41 +1,33 @@
 import React, { useEffect, useState } from "react";
 import { ChatState } from "../../context/ChatProvider";
-import { Box, Stack, useToast } from "@chakra-ui/react";
-import axios from "axios";
-import { API_BASE_URL } from "../../consts";
+import { Box, Stack, Button, Text } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
-import { Button, Text } from "@chakra-ui/react";
 import ChatLoading from "./ChatLoading";
 import { getChatName } from "../../config/chatLogics";
 import GroupChatModal from "./GroupChatModal";
+import useShowToast from "../useShowToast";
+import { fetchAllChats } from "../../apis/chat";
 
 const MyChats = ({ fetchAgain }) => {
   const [loggedUser, setLoggedUser] = useState("");
-  const { user, setUser, selectedChat, setSelectedChat, chats, setChats } =
-    ChatState();
-
-  const toast = useToast();
+  const [noChats, setNoChats] = useState(false);
+  const { selectedChat, setSelectedChat, chats, setChats } = ChatState();
+  const ShowToast = useShowToast();
 
   const fetchChats = async () => {
-    const user = JSON.parse(localStorage.getItem("userInfo"));
-    const config = {
-      headers: {
-        authorization: `Bearer ${user.token}`,
-      },
-    };
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/chats`, config);
+      const { data } = await fetchAllChats();
       setChats(data?.data?.chats);
+      setTimeout(() => {
+        setNoChats(true);
+      }, 3000);
     } catch (error) {
       console.log(error);
-      toast({
-        title: "Chat Access",
-        description: error.message || "Chats fetching error",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast(
+        "Chat Access",
+        error.message || "Chats fetching error",
+        "error"
+      );
     }
   };
 
@@ -104,7 +96,7 @@ const MyChats = ({ fetchAgain }) => {
                   key={chat._id}
                 >
                   <Text>
-                    {chat.isGroup
+                    {!!chat.isGroup
                       ? chat.name
                       : getChatName(loggedUser, chat.users)}
                   </Text>
@@ -112,6 +104,8 @@ const MyChats = ({ fetchAgain }) => {
               );
             })}
           </Stack>
+        ) : noChats ? (
+          "No Chats Available"
         ) : (
           <ChatLoading />
         )}

@@ -3,24 +3,24 @@ import {
   Button,
   FormControl,
   FormLabel,
+  IconButton,
   Input,
   InputGroup,
   InputRightElement,
   VStack,
-  useToast,
 } from "@chakra-ui/react";
-import axios from "axios";
-import { API_BASE_URL } from "../../consts";
-import { useHistory } from "react-router-dom";
 
+import { useHistory } from "react-router-dom";
+import useShowToast from "../useShowToast";
+import { loginUser } from "../../apis/auth.js";
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState("");
   const [loading, setLoading] = useState(false);
   const history = useHistory();
-
-  const toast = useToast();
+  const ShowToast = useShowToast();
 
   const resetForm = () => {
     setEmail("");
@@ -32,57 +32,27 @@ const Login = () => {
   const submitHandler = async () => {
     setLoading(true);
     if (!password || !email) {
-      toast({
-        title: "Invalid Form",
-        description: "Please fill all required fields.",
-        status: "warning",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast("Invalid Form", "Please fill all Required Fields.", "warning");
       setLoading(false);
-
       return;
     }
 
     try {
-      const config = {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
-      const userData = {
-        email,
-        password,
-      };
-      const { data } = await axios.post(
-        `${API_BASE_URL}/users/login`,
-        userData,
-        config
-      );
+      const { data } = await loginUser({ email, password });
 
-      toast({
-        title: "User Logging",
-        description: "User Logged In Successfully",
-        status: "success",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast("User Logging", "User Logged In Successfully", "success");
+
       localStorage.setItem("userInfo", JSON.stringify(data.data.user));
       history.push("/chats");
       window.location.reload(false);
       resetForm();
     } catch (error) {
       console.log(error);
-      toast({
-        title: "Login Error",
-        description: error.response.data.message || "Something went wrong",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast(
+        "Login Error",
+        error.response.data.message || "Something went wrong",
+        "error"
+      );
       setLoading(false);
     }
   };
@@ -96,7 +66,7 @@ const Login = () => {
           type="text"
           placeholder="Enter your Email"
           onChange={(e) => setEmail(e.target.value)}
-          variant="filled"
+          variant="outline"
         />
       </FormControl>
 
@@ -108,12 +78,13 @@ const Login = () => {
             type={show ? "text" : "password"}
             placeholder="Enter your password"
             onChange={(e) => setPassword(e.target.value)}
-            variant="filled"
+            variant="outline"
           />
-          <InputRightElement pr={2}>
-            <Button onClick={() => setShow(!show)}>
-              {show ? "Hide" : "Show"}
-            </Button>
+          <InputRightElement pr={0}>
+            <IconButton
+              icon={show ? <ViewOffIcon /> : <ViewIcon />}
+              onClick={() => setShow(!show)}
+            />
           </InputRightElement>
         </InputGroup>
       </FormControl>

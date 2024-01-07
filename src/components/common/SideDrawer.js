@@ -11,7 +11,6 @@ import {
   MenuDivider,
   useDisclosure,
   useDisclosure as useDisclose,
-  useToast,
   Drawer,
   DrawerOverlay,
   DrawerContent,
@@ -23,17 +22,18 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import React, { useState } from "react";
-import { API_BASE_URL } from "../../consts";
 import NotificationBadge from "react-notification-badge";
 import { Effect } from "react-notification-badge";
 import { SearchIcon, ChevronDownIcon, BellIcon } from "@chakra-ui/icons";
 import { ChatState } from "../../context/ChatProvider";
 import Profile from "./Profile";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
-import axios from "axios";
 import ChatLoading from "./ChatLoading";
 import UserListItem from "./UserListItem";
 import { getChatName } from "../../config/chatLogics";
+import useShowToast from "../useShowToast";
+import { fetchUsers } from "../../apis/chat/users";
+import { accessChatToUser } from "../../apis/chat/chats";
 
 const SideDrawer = () => {
   const [search, setSearch] = useState("");
@@ -59,70 +59,47 @@ const SideDrawer = () => {
     setNotification,
   } = ChatState();
   const btnRef = React.useRef();
-  const toast = useToast();
+  const ShowToast = useShowToast();
 
   const handleSearch = async () => {
     setLoading(true);
-    const user = JSON.parse(localStorage.getItem("userInfo"));
-    const config = {
-      headers: {
-        authorization: `Bearer ${user.token}`,
-      },
-    };
+
     try {
-      const { data } = await axios.get(
-        `${API_BASE_URL}/users?search=${search}`,
-        config
-      );
+      const { data } = await fetchUsers(search);
       setSearchResults(data.data.users);
       setLoading(false);
     } catch (error) {
       console.log(error);
-      toast({
-        title: "Fetch User Error",
-        description: "User fetch error",
-        status: "success",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast(
+        "Fetch User Error",
+        error.message || "User fetch error",
+        "success"
+      );
     }
   };
 
   const accessChat = async (userId) => {
     setLoadingChat(true);
-    const user = JSON.parse(localStorage.getItem("userInfo"));
-    const config = {
-      headers: {
-        "Content-type": "application/json",
-        authorization: `Bearer ${user.token}`,
-      },
-    };
+
     try {
-      const { data } = await axios.post(
-        `${API_BASE_URL}/chats`,
-        { userId },
-        config
-      );
-      if (!chats.find((c) => c._id === data?.data?.chats[0]._id)) {
+      const { data } = await accessChatToUser(userId);
+
+      if (
+        Array.isArray(chats) &&
+        !chats.find((c) => c._id === data?.data?.chats[0]._id)
+      ) {
         setChats([data?.data?.chats[0], ...chats]);
       }
-      setSelectedChat(data?.data?.chats);
+      setSelectedChat(data?.data?.chats[0]);
       D_onClose();
       setLoadingChat(false);
     } catch (error) {
       setLoadingChat(false);
       console.log(error);
-      toast({
-        title: "Chat Access User Error",
-        description: "Chat Access Error",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-        position: "top",
-      });
+      ShowToast("User Chat", error.message || "Chat Access Error", "error");
     }
   };
+
   return (
     <React.Fragment>
       <Profile user={user} isOpen={isOpen} onClose={onClose} />
@@ -258,14 +235,11 @@ const SideDrawer = () => {
                   localStorage.removeItem("userInfo");
                   history.push("/");
                   window.location.reload(false);
-                  toast({
-                    title: "Logout",
-                    description: "User Logged out Successfully.",
-                    status: "success",
-                    duration: 4000,
-                    isClosable: true,
-                    position: "top",
-                  });
+                  ShowToast(
+                    "Logout",
+                    "User Logged out Successfully.",
+                    "success"
+                  );
                 }}
               >
                 Logout
