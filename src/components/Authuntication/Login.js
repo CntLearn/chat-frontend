@@ -50,7 +50,7 @@ const Login = () => {
       console.log(error);
       ShowToast(
         "Login Error",
-        error.response.data.message || "Something went wrong",
+        error.response?.data.message || "Something went wrong",
         "error"
       );
       setLoading(false);

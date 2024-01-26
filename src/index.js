@@ -10,11 +10,11 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <Router>
-      <ChatProvider>
-        <ChakraProvider>
+      <ChakraProvider>
+        <ChatProvider>
           <App />
-        </ChakraProvider>
-      </ChatProvider>
+        </ChatProvider>
+      </ChakraProvider>
     </Router>
   </React.StrictMode>
 );

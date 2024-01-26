@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ChatState } from "../../context/ChatProvider";
 import {
   Box,
@@ -18,6 +18,8 @@ import "./singleChat.css";
 import io from "socket.io-client";
 import useShowToast from "../useShowToast";
 import { fetchMessages, sendMessageToUser } from "../../apis/chat/messages";
+import aud from "../../videos/dock.mp3";
+import { useLayoutEffect } from "react";
 
 let socket = "",
   selectedChatCompare = "";
@@ -38,13 +40,115 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [socketConnected, SetSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const audioRef = useRef(null);
+  const buttonRef = useRef(null);
 
   useEffect(() => {
     fetchAllMessages();
     selectedChatCompare = selectedChat;
   }, [selectedChat]);
+  // WORKING in a environment., in a environment...
+  const test = () => {
+    // buttonRef.current.click();
+    // const audio = new Audio(aud);
+    // const playPromise = audio.play();
+    // if (playPromise !== undefined) {
+    //   playPromise
+    //     .then(() => {
+    //       console.log("aaaaaaaaaaaa inner");
+    //       // Audio started playing
+    //     })
+    //     .catch((error) => {
+    //       console.error("Error playing audio:", error);
+    //     });
+    // }
+    // audio.addEventListener("canplaythrough", () => {
+    //   console.log("calling play on");
+    //   audio
+    //     .play()
+    //     .then(() => {
+    //       console.log("calling playing");
+    //     })
+    //     .catch((e) => {
+    //       window.addEventListener(
+    //         "click",
+    //         () => {
+    //           console.log("calling click on");
+    //           audio.play();
+    //         },
+    //         { once: true }
+    //       );
+    //     });
+    // });
+  };
+
+  const playAudio = () => {
+    console.log("calling play audio ");
+
+    // audioRef.current.addEventListener("canplaythrough", () => {
+    //   console.log("calling play on");
+    //   audioRef.current
+    //     .play()
+    //     .then(() => {
+    //       console.log("calling playing");
+    //     })
+    //     .catch((e) => {
+    //       window.addEventListener(
+    //         "click",
+    //         () => {
+    //           console.log("calling click on");
+    //           audioRef.current.play();
+    //         },
+    //         { once: true }
+    //       );
+    //     });
+    // });
+
+    if (audioRef.current) {
+      console.log("aaaaaaaaaaaa");
+
+      audioRef.current.muted = true;
+
+      const playPromise = audioRef.current.play();
+
+      console.log("palysing audio", playPromise);
+
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log("aaaaaaaaaaaa inner");
+            // Audio started playing
+          })
+          .catch((error) => {
+            console.error("Error playing audio:", error);
+          });
+      }
+    }
+  };
+
+  const autoClick = () => {
+    if (buttonRef.current) {
+      buttonRef.current.addEventListener("click", () => {
+        console.log("auto click is supported");
+      });
+      buttonRef.current.click();
+    }
+  };
 
   useEffect(() => {
+    document.body.addEventListener("mouseover", function () {
+      console.log("clicked");
+    });
+    document.body.addEventListener("click", function () {
+      console.log("clicked");
+    });
+    document.body.addEventListener("mouseout", function () {
+      console.log("mouseout");
+    });
+    document.body.addEventListener("focus", function () {
+      console.log("focus");
+    });
+
     socket = io(API_END_POINT);
     socket.emit("setup", user);
     socket.on("connected", () => {
@@ -60,6 +164,18 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     socket.on("stop typing", () => {
       setIsTyping(() => false);
     });
+    socket.on("audio", () => {
+      // isOpen();
+      // test();
+      // buttonRef.current.click();
+      // buttonRef.current.addEventListener("click", playAudio);
+      autoClick();
+      playAudio();
+      // buttonRef.current.click();
+    });
+  }, []);
+  useLayoutEffect(() => {
+    autoClick();
   }, []);
 
   useEffect(() => {
@@ -161,6 +277,28 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         isOpen={isOpen}
         onClose={onClose}
       />
+      <iframe
+        src={aud}
+        allow="autoplay"
+        style={{ display: "none" }}
+        id="iframeAudio"
+      ></iframe>
+      <button style={{ display: "none" }} ref={buttonRef}>
+        Play Audio
+      </button>
+      <audio
+        style={{ display: "none" }}
+        id="id"
+        // autoPlay={"autoplay"}
+        // autoPlay
+        muted={"muted"}
+        // muted
+        ref={audioRef}
+        controls
+        preload="auto"
+      >
+        <source src={aud} type="audio/mpeg" />
+      </audio>
       {selectedChat ? (
         <React.Fragment>
           <Text

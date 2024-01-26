@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ChatState } from "../context/ChatProvider";
 import { ChatBox, MyChats, SideDrawer } from "../components/common";
 import { Box } from "@chakra-ui/react";
+
 // pages,, chatsPage
 const Chats = () => {
   const { user } = ChatState();
@@ -16,9 +17,11 @@ const Chats = () => {
         p={"5px"}
         h={"93.5vh"}
       >
-        {user && <MyChats fetchAgain={fetchAgain} />}
         {user && (
-          <ChatBox fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} />
+          <React.Fragment>
+            <MyChats fetchAgain={fetchAgain} />
+            <ChatBox fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} />
+          </React.Fragment>
         )}
       </Box>
     </div>

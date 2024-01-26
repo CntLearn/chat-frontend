@@ -1,0 +1,8 @@
+.test {
+  background-color: rgba(242, 246, 248, 1);
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
