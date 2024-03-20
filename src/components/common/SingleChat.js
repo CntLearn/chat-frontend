@@ -14,17 +14,13 @@ import { getChatName, getChatNameFull } from "../../config/chatLogics";
 import Profile from "./Profile";
 import UpdateGroupChatModal from "./UpdateGroupChatModal";
 import ScrollableChat from "./ScrollableChat";
-import "./singleChat.css";
-import io from "socket.io-client";
 import useShowToast from "../useShowToast";
 import { fetchMessages, sendMessageToUser } from "../../apis/chat/messages";
 import aud from "../../videos/dock.mp3";
-import { useLayoutEffect } from "react";
+import { socket } from "../../utils/socketConnection";
+import "./singleChat.css";
 
-let socket = "",
-  selectedChatCompare = "";
-
-const API_END_POINT = "http://localhost:5000";
+let selectedChatCompare = "";
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const { user, selectedChat, setSelectedChat, notification, setNotification } =
@@ -104,26 +100,26 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     //     });
     // });
 
-    if (audioRef.current) {
-      console.log("aaaaaaaaaaaa");
+    // if (audioRef.current) {
+    //   console.log("aaaaaaaaaaaa");
 
-      audioRef.current.muted = true;
+    //   audioRef.current.muted = true;
 
-      const playPromise = audioRef.current.play();
+    //   const playPromise = audioRef.current.play();
 
-      console.log("palysing audio", playPromise);
+    //   console.log("palysing audio", playPromise);
 
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            console.log("aaaaaaaaaaaa inner");
-            // Audio started playing
-          })
-          .catch((error) => {
-            console.error("Error playing audio:", error);
-          });
-      }
-    }
+    //   if (playPromise !== undefined) {
+    //     playPromise
+    //       .then(() => {
+    //         console.log("aaaaaaaaaaaa inner");
+    //         // Audio started playing
+    //       })
+    //       .catch((error) => {
+    //         console.error("Error playing audio:", error);
+    //       });
+    //   }
+    // }
   };
 
   const autoClick = () => {
@@ -136,20 +132,20 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   };
 
   useEffect(() => {
-    document.body.addEventListener("mouseover", function () {
-      console.log("clicked");
-    });
-    document.body.addEventListener("click", function () {
-      console.log("clicked");
-    });
-    document.body.addEventListener("mouseout", function () {
-      console.log("mouseout");
-    });
-    document.body.addEventListener("focus", function () {
-      console.log("focus");
-    });
+    // document.body.addEventListener("mouseover", function () {
+    //   console.log("clicked");
+    // });
+    // document.body.addEventListener("click", function () {
+    //   console.log("clicked");
+    // });
+    // document.body.addEventListener("mouseout", function () {
+    //   console.log("mouseout");
+    // });
+    // document.body.addEventListener("focus", function () {
+    //   console.log("focus");
+    // });
 
-    socket = io(API_END_POINT);
+    // socket = io(API_END_POINT);
     socket.emit("setup", user);
     socket.on("connected", () => {
       console.log("connection established");
@@ -164,18 +160,15 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     socket.on("stop typing", () => {
       setIsTyping(() => false);
     });
-    socket.on("audio", () => {
-      // isOpen();
-      // test();
-      // buttonRef.current.click();
-      // buttonRef.current.addEventListener("click", playAudio);
-      autoClick();
-      playAudio();
-      // buttonRef.current.click();
-    });
-  }, []);
-  useLayoutEffect(() => {
-    autoClick();
+    // socket.on("audio", () => {
+    //   // isOpen();
+    //   // test();
+    //   // buttonRef.current.click();
+    //   // buttonRef.current.addEventListener("click", playAudio);
+    //   autoClick();
+    //   playAudio();
+    //   // buttonRef.current.click();
+    // });
   }, []);
 
   useEffect(() => {
@@ -277,7 +270,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         isOpen={isOpen}
         onClose={onClose}
       />
-      <iframe
+      {/*
+        <iframe
         src={aud}
         allow="autoplay"
         style={{ display: "none" }}
@@ -299,6 +293,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       >
         <source src={aud} type="audio/mpeg" />
       </audio>
+        */}
       {selectedChat ? (
         <React.Fragment>
           <Text

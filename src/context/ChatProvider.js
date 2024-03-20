@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useHistory } from "react-router-dom";
+// import { useHistory } from "react-router-dom";
 import "./test.css";
 import { Button, Text } from "@chakra-ui/react";
 const ChatContext = createContext("");
@@ -8,41 +8,43 @@ const ChatProvider = ({ children }) => {
   const [user, setUser] = useState("");
   const [selectedChat, setSelectedChat] = useState("");
   const [chats, setChats] = useState([]);
-  const [route, setRoute] = useState(false);
 
   const [notification, setNotification] = useState([]);
-  const history = useHistory();
-  useEffect(() => {
-    const path = history.location.pathname;
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  // const history = useHistory();
 
-    if (!userInfo) {
-      !!history && history.push("/");
-      setRoute(false);
-    } else if (path.endsWith("/chats")) {
-      moveHistory("/chats");
-    } else if (path.endsWith("/messenger")) {
-      // moveHistory("/messenger");
-    }
-  }, [history]);
+  // useEffect(() => {
+  //   const path = history.location.pathname;
+  //   const localData = localStorage.getItem("userInfo");
+  //   const userInfo = !!localData && JSON.parse(localData);
+  //   if (userInfo) {
+  //     moveHistory("/app");
+  //   } else if (!userInfo) {
+  //     !!history && history.push("/");
+  //   } else if (path.endsWith("/chats")) {
+  //     moveHistory("/chats");
+  //   } else if (path.endsWith("/messenger")) {
+  //     moveHistory("/messenger");
+  //   }
+  // }, [history]);
 
-  const moveHistory = (moveTo) => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    if (!userInfo) {
-      !!history && history.push("/");
-      setRoute(false);
-    }
-    if (moveTo === "/chats") {
-      !!history && history.push("/chats");
-      setUser(userInfo);
-      setRoute(true);
-    }
-    if (moveTo === "/messenger") {
-      !!history && history.push("/messenger");
-      setUser(userInfo);
-      setRoute(true);
-    }
-  };
+  // const moveHistory = (moveTo) => {
+  //   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  //   if (!userInfo) {
+  //     !!history && history.push("/");
+  //   }
+  //   if (moveTo === "/chats") {
+  //     !!history && history.push("/chats");
+  //     setUser(userInfo);
+  //   }
+  //   if (moveTo === "/messenger") {
+  //     !!history && history.push("/messenger");
+  //     setUser(userInfo);
+  //   }
+  //   if (moveTo === "/app") {
+  //     !!history && history.push("/app");
+  //     setUser(userInfo);
+  //   }
+  // };
 
   return (
     <React.Fragment>

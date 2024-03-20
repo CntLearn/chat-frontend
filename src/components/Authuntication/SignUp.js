@@ -134,7 +134,6 @@ const SignUp = () => {
       <FormControl isRequired>
         <FormLabel>Name</FormLabel>
         <Input
-          defaultValue={name}
           type="text"
           placeholder="Enter your name"
           onChange={(e) => setName(e.target.value)}

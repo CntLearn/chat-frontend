@@ -78,7 +78,6 @@ const GroupChatModal = ({ children }) => {
         "Atleast Two User must be Selected",
         "warning"
       );
-
       return;
     }
     try {
@@ -102,7 +101,6 @@ const GroupChatModal = ({ children }) => {
   const handleGroup = (user) => {
     if (selectedUsers.find((usr) => usr._id === user._id)) {
       ShowToast("User Selection", "User Already Selected", "warning");
-
       return;
     }
     setSelectedUsers([...selectedUsers, user]);

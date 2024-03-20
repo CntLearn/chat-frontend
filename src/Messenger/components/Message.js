@@ -5,7 +5,6 @@ import pic from "../../assets/background.png";
 import "../styles/message.css";
 import { Avatar } from "@chakra-ui/react";
 const Message = ({ own, message }) => {
-  console.log("Message", message);
   return (
     <div className={own ? "message own" : "message"}>
       <div className="messageTop">

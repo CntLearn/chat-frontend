@@ -27,13 +27,13 @@ import { Effect } from "react-notification-badge";
 import { SearchIcon, ChevronDownIcon, BellIcon } from "@chakra-ui/icons";
 import { ChatState } from "../../context/ChatProvider";
 import Profile from "./Profile";
-import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import ChatLoading from "./ChatLoading";
 import UserListItem from "./UserListItem";
 import { getChatName } from "../../config/chatLogics";
 import useShowToast from "../useShowToast";
 import { fetchUsers } from "../../apis/chat/users";
 import { accessChatToUser } from "../../apis/chat/chats";
+import { useNavigate } from "react-router-dom";
 
 const SideDrawer = () => {
   const [search, setSearch] = useState("");
@@ -48,10 +48,9 @@ const SideDrawer = () => {
     onClose: D_onClose,
   } = useDisclose();
 
-  const history = useHistory();
+  const navigate = useNavigate();
   const {
     user,
-    // selectedChat,
     setSelectedChat,
     chats,
     setChats,
@@ -162,9 +161,12 @@ const SideDrawer = () => {
         display={"flex"}
         justifyContent={"space-between"}
         alignItems={"center"}
-        width={"100%"}
         bg={"white"}
-        p={"5px 10px"}
+        p={"10px 10px"}
+        ml={1}
+        mr={1}
+        borderRadius={"lg"}
+        borderWidth={"1px"}
       >
         <Tooltip hasArrow label="Search Users to Chat" placement="bottom-end">
           <Button onClick={D_onOpen}>
@@ -233,8 +235,7 @@ const SideDrawer = () => {
               <MenuItem
                 onClick={() => {
                   localStorage.removeItem("userInfo");
-                  history.push("/");
-                  window.location.reload(false);
+                  navigate("/");
                   ShowToast(
                     "Logout",
                     "User Logged out Successfully.",

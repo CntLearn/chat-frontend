@@ -9,7 +9,7 @@ import useShowToast from "../useShowToast";
 import { fetchAllChats } from "../../apis/chat";
 
 const MyChats = ({ fetchAgain }) => {
-  const [loggedUser, setLoggedUser] = useState("");
+  const { user: loggedUser } = ChatState();
   const [noChats, setNoChats] = useState(false);
   const { selectedChat, setSelectedChat, chats, setChats } = ChatState();
   const ShowToast = useShowToast();
@@ -32,7 +32,6 @@ const MyChats = ({ fetchAgain }) => {
   };
 
   useEffect(() => {
-    setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
     fetchChats();
   }, [fetchAgain]);
 

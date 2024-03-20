@@ -6,35 +6,46 @@ import { useEffect } from "react";
 import { ChatState } from "../../context/ChatProvider";
 import { conversations } from "../apis/conversation";
 import { fetchMessages, sendMessages } from "../apis/messages";
+import SearchUsers from "./SearchUsers";
+import { Box, Text } from "@chakra-ui/react";
+import { socket } from "../../utils/socketConnection";
 import "../styles/messenger.css";
 
-import { io } from "socket.io-client";
-import SearchUsers from "./SearchUsers";
-const API_END_POINT = "http://localhost:5000";
-
-let socket = io(API_END_POINT);
-
 const Meesenger = () => {
+  console.log("Meesenger loaded");
+
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  // const { user: userInfo } = ChatState();
   const [allConversation, setAllConversation] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessages, setNewMessages] = useState("");
+  const [arrivalMessage, setArrivalMessage] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
   const messagesRef = useRef(null);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetchAllConversation();
-
     // socket.emit("addUser", userInfo._id);
     socket.emit("addUser", userInfo);
+
     socket.on("getUsers", (allOnlineUsers) => setOnlineUsers(allOnlineUsers));
+
     socket.on("getMessages", (newMessage) => {
-      console.log("new message", newMessage);
-      setMessages([...messages, newMessage]);
+      setArrivalMessage(newMessage);
+      // setMessages((prev) => {
+      //   return [...prev, newMessage];
+      // });
     });
   }, []);
+
+  useEffect(() => {
+    arrivalMessage &&
+      setMessages((prev) => {
+        return [...prev, arrivalMessage];
+      });
+  }, [arrivalMessage]);
 
   const fetchAllConversation = async () => {
     const conversation = await conversations(userInfo?._id);
@@ -58,7 +69,7 @@ const Meesenger = () => {
   }, [messages]);
 
   const fetchAllMessagesOfAChat = async () => {
-    if (currentChat) {
+    if (!!currentChat) {
       try {
         const { data } = await fetchMessages(currentChat._id);
         if (data.success) {
@@ -92,7 +103,7 @@ const Meesenger = () => {
 
       if (data.success) {
         // setMessages([...messages, data.data.message]);
-        setMessages((prev) => [...prev, data.data.message]);
+        setMessages((prev) => [...prev, data.data.message[0]]);
       }
 
       setNewMessages("");
@@ -119,25 +130,28 @@ const Meesenger = () => {
     }
   };
 
-  console.log("all messages ", messages);
-
   return (
     <div className="messenger">
-      <div style={{ background: "cadetblue", color: "white", height: "100px" }}>
+      <Box
+        borderRadius={"lg"}
+        borderWidth={"1px"}
+        //</div>style={{ background: "cadetblue", color: "white" }}
+        bg={"teal"}
+      >
         <SearchUsers />
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "15px",
-            fontSize: "20px",
-          }}
+        <Box
+          display={"flex"}
+          alignItems={"center"}
+          justifyContent={"space-between"}
         >
-          <div>{userInfo?.name.toUpperCase()} </div>
-          <div>{userInfo?.email} </div>
-        </div>
-      </div>
+          <Text p={5} fontSize="2xl">
+            {!!userInfo && userInfo.name.toUpperCase()}
+          </Text>
+          <Text p={5} fontSize="2xl">
+            {!!userInfo && userInfo.email}
+          </Text>
+        </Box>
+      </Box>
       <div className="chat">
         <div className="chatMenu">
           <div className="chatMenuWrapper">
@@ -191,7 +205,7 @@ const Meesenger = () => {
                       return (
                         <div key={index} ref={messagesRef}>
                           <Message
-                            own={userInfo._id === message.sender._id}
+                            own={userInfo?._id === message.sender._id}
                             message={message}
                           />
                         </div>
@@ -224,9 +238,10 @@ const Meesenger = () => {
           <div className="chatOnlineWrapper">
             {Array.isArray(onlineUsers) && onlineUsers.length > 0 ? (
               onlineUsers.map((usr) => {
-                if (userInfo._id !== usr.user._id) {
-                  return <ChatOnline key={usr.user._id} usr={usr.user} />;
+                if (usr && userInfo._id !== usr?.user._id) {
+                  return <ChatOnline key={usr?.user._id} usr={usr?.user} />;
                 }
+                return "";
               })
             ) : (
               <div>No Any online contacts</div>

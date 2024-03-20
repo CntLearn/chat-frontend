@@ -14,15 +14,15 @@ const ChatOnline = ({ usr }) => {
           <Avatar
             size={"sm"}
             // mr={2}
-            name={usr.name}
+            name={usr?.name}
             cursor={"pointer"}
-            src={usr.pic}
-            alt={usr.name}
+            src={usr?.pic}
+            alt={usr?.name}
           />
 
           <div className="chatOnlineBadge" />
         </div>
-        <span className="chatOnlineName"> {usr.name} </span>
+        <span className="chatOnlineName"> {usr?.name} </span>
       </div>
     </div>
   );

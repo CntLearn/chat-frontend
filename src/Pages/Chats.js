@@ -5,26 +5,23 @@ import { Box } from "@chakra-ui/react";
 
 // pages,, chatsPage
 const Chats = () => {
+  console.log("chats loaded");
   const { user } = ChatState();
   const [fetchAgain, setFetchAgain] = useState(false);
   return (
-    <div style={{ width: "100%" }}>
+    <Box>
       {user && <SideDrawer />}
       <Box
         display="flex"
         justifyContent={"space-between"}
-        w={"100%"}
+        // w={"100%"}
         p={"5px"}
-        h={"93.5vh"}
+        h={"90vh"}
       >
-        {user && (
-          <React.Fragment>
-            <MyChats fetchAgain={fetchAgain} />
-            <ChatBox fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} />
-          </React.Fragment>
-        )}
+        <MyChats fetchAgain={fetchAgain} />
+        <ChatBox fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} />
       </Box>
-    </div>
+    </Box>
   );
 };
 

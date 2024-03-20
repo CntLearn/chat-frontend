@@ -10,41 +10,44 @@ import {
   VStack,
 } from "@chakra-ui/react";
 
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import useShowToast from "../useShowToast";
 import { loginUser } from "../../apis/auth.js";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+const initialState = {
+  email: "",
+  password: "",
+};
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [state, setState] = useState(initialState);
   const [show, setShow] = useState("");
   const [loading, setLoading] = useState(false);
-  const history = useHistory();
+  const navigate = useNavigate();
+
   const ShowToast = useShowToast();
 
   const resetForm = () => {
-    setEmail("");
-    setPassword("");
+    setState(initialState);
     setLoading(false);
     setShow(false);
   };
 
   const submitHandler = async () => {
     setLoading(true);
-    if (!password || !email) {
+    if (!state.password || !state.email) {
       ShowToast("Invalid Form", "Please fill all Required Fields.", "warning");
       setLoading(false);
       return;
     }
 
     try {
+      const { email, password } = state;
       const { data } = await loginUser({ email, password });
 
       ShowToast("User Logging", "User Logged In Successfully", "success");
 
       localStorage.setItem("userInfo", JSON.stringify(data.data.user));
-      history.push("/chats");
-      window.location.reload(false);
+      navigate("/app");
       resetForm();
     } catch (error) {
       console.log(error);
@@ -56,17 +59,27 @@ const Login = () => {
       setLoading(false);
     }
   };
+  const setStateFun = (event) => {
+    const { name, value } = event.target;
+    setState((prevState) => {
+      return {
+        ...prevState,
+        [name]: value,
+      };
+    });
+  };
 
   return (
     <VStack spacing={5}>
       <FormControl isRequired>
         <FormLabel>Email</FormLabel>
         <Input
-          value={email}
+          value={state.email}
           type="text"
           placeholder="Enter your Email"
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => setStateFun(e)}
           variant="outline"
+          name="email"
         />
       </FormControl>
 
@@ -74,11 +87,12 @@ const Login = () => {
         <FormLabel>Password</FormLabel>
         <InputGroup>
           <Input
-            value={password}
+            value={state.password}
             type={show ? "text" : "password"}
             placeholder="Enter your password"
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => setStateFun(e)}
             variant="outline"
+            name="password"
           />
           <InputRightElement pr={0}>
             <IconButton
@@ -101,10 +115,9 @@ const Login = () => {
         variant={"solid"}
         w={"100%"}
         colorScheme={"red"}
-        onClick={() => {
-          setEmail("guest@example.com");
-          setPassword("12345");
-        }}
+        onClick={() =>
+          setState({ email: "guest@example.com", password: "12345" })
+        }
       >
         Get Guest User Credentials
       </Button>
