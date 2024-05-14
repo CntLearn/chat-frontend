@@ -25,10 +25,7 @@ const Home = () => {
         borderWidth={"1px"}
       >
         <Text fontSize={"4xl"} fontFamily={"Work sans"} textAlign={"center"}>
-          Talk
-          {
-            //-A-Tive
-          }
+          Welcome To Chats
         </Text>
       </Box>
       <Box

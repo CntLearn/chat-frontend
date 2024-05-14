@@ -177,7 +177,7 @@ const Meesenger = () => {
                         setCurrentChat(chat);
                       }}
                       style={
-                        currentChat
+                        currentChat?._id===chat._id
                           ? { background: "#dfd9d9f0", borderRadius: "10px" }
                           : {}
                       }
@@ -201,7 +201,7 @@ const Meesenger = () => {
               <React.Fragment>
                 <div className="chatBoxTop">
                   {Array.isArray(messages) &&
-                    messages.map((message, index) => {
+                    messages.filter(mes => mes.conversationId === currentChat._id).map((message, index) => {
                       return (
                         <div key={index} ref={messagesRef}>
                           <Message

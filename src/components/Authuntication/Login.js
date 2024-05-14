@@ -14,20 +14,21 @@ import { useNavigate } from "react-router-dom";
 import useShowToast from "../useShowToast";
 import { loginUser } from "../../apis/auth.js";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
-const initialState = {
+import { ChatState } from "../../context/ChatProvider.js";
+const INITIAL_STATE = {
   email: "",
   password: "",
 };
 const Login = () => {
-  const [state, setState] = useState(initialState);
+  const [state, setState] = useState(INITIAL_STATE);
   const [show, setShow] = useState("");
   const [loading, setLoading] = useState(false);
+  const { setUser } = ChatState();
   const navigate = useNavigate();
-
   const ShowToast = useShowToast();
 
   const resetForm = () => {
-    setState(initialState);
+    setState(INITIAL_STATE);
     setLoading(false);
     setShow(false);
   };
@@ -45,8 +46,9 @@ const Login = () => {
       const { data } = await loginUser({ email, password });
 
       ShowToast("User Logging", "User Logged In Successfully", "success");
-
-      localStorage.setItem("userInfo", JSON.stringify(data.data.user));
+      const user = JSON.stringify(data.data.user)
+      localStorage.setItem("userInfo", user);
+      setUser(user)
       navigate("/app");
       resetForm();
     } catch (error) {

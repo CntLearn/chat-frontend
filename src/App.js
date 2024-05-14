@@ -22,8 +22,8 @@ function App() {
       <Routes>
         <Route exact path="/" element={<Home />} />
         {!!localUser && (
-          <Route path="/app" element={<Main />}>
-            <Route path="" index element={<Chats />} />
+          <Route exact path="/app" element={<Main />}>
+            <Route path="" element={<Chats />} />
             <Route path="messenger" element={<Meesenger />} />
           </Route>
         )}
